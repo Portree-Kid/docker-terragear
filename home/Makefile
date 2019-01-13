@@ -5,8 +5,8 @@ THREADS=2
 
 -include $(TGROOT)/config/config.mk
 
-DAT_FILES := $(wildcard $(TGROOT)/airports/dat/*.dat)
-STA_FILES := $(addprefix $(TGROOT)/airports/state/,$(notdir $(DAT_FILES:.dat=.sta)))
+DAT_FILES != grep -e '^1  ' $(TGROOT)/airports/apt.dat | cut -c14-17 | sed 's/\([A-Z0-9]*\)/\$$\(TGROOT\)\/airports\/dat\/\1.dat/g' | tr '\n' ' '
+STA_FILES != grep -e '^1  ' $(TGROOT)/airports/apt.dat | cut -c14-17 | sed 's/\([A-Z0-9]*\)/\$$\(TGROOT\)\/airports\/state\/\1.sta/g' | tr '\n' ' '
 
 GENAPTS_FLAGS=--work=$(TGROOT)/work --threads=$(THREADS) --nudge=$(NUDGE)
 
@@ -36,6 +36,11 @@ terrain:
 	@mkdir -p $(TERRAIN_DIR)
 	echo $(TGCONSTRUCT_FLAGS)
 	tg-construct $(TGCONSTRUCT_FLAGS)
+	
+$(TGROOT)/airports/dat/%.dat: $(TGROOT)/airports/apt.dat
+	@mkdir -p $(TGROOT)/airports/dat
+	@cat $(TGROOT)/airports/apt.dat | awk '/^1   /{flag=1} !flag{print }' > $@
+	@cat $(TGROOT)/airports/apt.dat | awk '/^1   /{flag=0} /^1[ 0-9]*$*/{flag=1}flag{print }' >> $@
 	
 $(TGROOT)/airports/state/%.sta: $(TGROOT)/airports/dat/%.dat
 	mkdir -p $(TGROOT)/airports/state
